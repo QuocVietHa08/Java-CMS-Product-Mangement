@@ -9,10 +9,16 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.Date;
+import java.util.Calendar;
+import java.text.DateFormat;
 import javax.swing.ImageIcon;
+import java.text.ParseException;
+import java.util.Date;  
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import java.text.SimpleDateFormat;
 import java.sql.*;
 public class HOADON extends javax.swing.JFrame {
 
@@ -35,13 +41,14 @@ public class HOADON extends javax.swing.JFrame {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getListNV();
         getListSP();
+        getListKH();
         listt = getListHD();
         model = (DefaultTableModel) tblQLSP.getModel();
         loadDbToTable();
     }
             public boolean check() {
         if (MA.getText().equals("") || NV.getSelectedItem().toString().equals("") || Gia.getText().equals("")
-                || SL.getText().equals("") || Ngay.getText().equals("") || KH.getText().equals("") || SP.getSelectedItem().toString().equals("") ) {
+                || SL.getText().equals("") || Ngay.getText().equals("") || KH2.getSelectedItem().toString().equals("") || SP.getSelectedItem().toString().equals("") ) {
             JOptionPane.showMessageDialog(rootPane, "Hãy nhập đủ dữ liệu sau đó ấn Save");
             return false;
         } 
@@ -136,6 +143,50 @@ public class HOADON extends javax.swing.JFrame {
         }
         return li;
     }
+    
+    public ArrayList<product> getListKH() {
+        String sql = "SELECT Tenkh FROM khachhang";
+       try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet r = ps.executeQuery();
+            while (r.next()) {
+                kh p = new kh();
+                p.setTenkh(r.getString("Tenkh"));
+                KH2.addItem(p.getTenkh());
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return li;
+    }
+    
+    public static boolean isDateValid(String date) {
+        String DATE_FORMAT = "dd/mm/yyyy";
+        try {
+            // validate format 
+            DateFormat df = new SimpleDateFormat(DATE_FORMAT);
+//            SimpleDateFormat formatter = new SimpleDateFormat("dd/mm/yyyy");  
+            df.setLenient(false);
+            df.parse(date);
+            
+//            Date currentDate = new Date();  
+            
+//             System.out.println(formatter.format(currentDate));
+            // validate date is not overcome today
+//            String currentDate = new SimpleDateFormat("dd/mm/yyyy").format(Calendar.getInstances().getTime());
+//            System.out.println(df.parse(date).after(df.parse(currentDate)));
+//            System.out.println(currentDate);
+//
+//           if (!df.parse(date).after(df.parse(currentDate))) {
+//               System.out.println(currentDate);
+//               return false;
+//           }
+
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
         public boolean saveHD(hd pr) {
         String sql = "INSERT INTO HOADON VALUES(?,?,?,?,?,?,?,?)";
         try {
@@ -154,7 +205,13 @@ public class HOADON extends javax.swing.JFrame {
             ps.setString(5, pr.getGia());
             ps.setString(6, pr.getSl());
             ps.setString(7, pr.getThanhtien());
-            ps.setString(8, pr.getNgaylap());
+            // validate ngay lap
+            if (isDateValid(pr.getNgaylap())) {
+                ps.setString(8, pr.getNgaylap());
+            } else {
+               JOptionPane.showMessageDialog(rootPane, "Validate ngày lập bị sai format");
+               return false;
+            }
             return ps.executeUpdate() > 0;
             }
         } catch (Exception e) {
@@ -172,7 +229,6 @@ public class HOADON extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         MA = new javax.swing.JTextField();
-        KH = new javax.swing.JTextField();
         NV = new javax.swing.JComboBox<>();
         SP = new javax.swing.JComboBox<>();
         SL = new javax.swing.JTextField();
@@ -187,22 +243,23 @@ public class HOADON extends javax.swing.JFrame {
         jLabel8 = new javax.swing.JLabel();
         Gia = new javax.swing.JTextField();
         btnNew = new javax.swing.JButton();
+        KH2 = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jLabel2.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel2.setText("Mã Hóa Đơn:");
 
-        jLabel3.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jLabel3.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel3.setText("Tên Sản Phẩm:");
 
-        jLabel4.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jLabel4.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel4.setText("Tên Khách Hàng:");
 
-        jLabel5.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jLabel5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel5.setText("Số Lượng:");
 
-        jLabel6.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jLabel6.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel6.setText("Tên Nhân Viên:");
 
         NV.addItemListener(new java.awt.event.ItemListener() {
@@ -241,27 +298,35 @@ public class HOADON extends javax.swing.JFrame {
         });
         jScrollPane2.setViewportView(tblQLSP);
 
-        btnSave.setText("Save");
+        btnSave.setBackground(new java.awt.Color(255, 102, 0));
+        btnSave.setIcon(new javax.swing.ImageIcon("C:\\DriveC\\Java\\Project_CMS\\QLCH\\src\\images\\save-20.png")); // NOI18N
+        btnSave.setText("Lưu");
         btnSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSaveActionPerformed(evt);
             }
         });
 
-        btnDelete.setText("Delete");
+        btnDelete.setBackground(new java.awt.Color(255, 102, 0));
+        btnDelete.setIcon(new javax.swing.ImageIcon("C:\\DriveC\\Java\\Project_CMS\\QLCH\\src\\images\\delete-20.png")); // NOI18N
+        btnDelete.setText("Xóa");
         btnDelete.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDeleteActionPerformed(evt);
             }
         });
 
-        jButton1.setText("Find");
+        jButton1.setBackground(new java.awt.Color(255, 102, 0));
+        jButton1.setIcon(new javax.swing.ImageIcon("C:\\DriveC\\Java\\Project_CMS\\QLCH\\src\\images\\search-20.png")); // NOI18N
+        jButton1.setText("Tìm kiếm");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
+        jButton2.setBackground(new java.awt.Color(255, 102, 0));
+        jButton2.setIcon(new javax.swing.ImageIcon("C:\\DriveC\\Java\\Project_CMS\\QLCH\\src\\images\\load-20.png")); // NOI18N
         jButton2.setText("Load");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -269,16 +334,30 @@ public class HOADON extends javax.swing.JFrame {
             }
         });
 
-        jLabel7.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
+        jLabel7.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel7.setText("Ngày Lập:");
 
-        jLabel8.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        jLabel8.setText("Gia:");
+        Ngay.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                NgayActionPerformed(evt);
+            }
+        });
 
-        btnNew.setText("New");
+        jLabel8.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel8.setText("Giá");
+
+        btnNew.setBackground(new java.awt.Color(255, 102, 0));
+        btnNew.setIcon(new javax.swing.ImageIcon("C:\\DriveC\\Java\\Project_CMS\\QLCH\\src\\images\\empty-trash-20.png")); // NOI18N
+        btnNew.setText("Clear");
         btnNew.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnNewActionPerformed(evt);
+            }
+        });
+
+        KH2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                KH2ActionPerformed(evt);
             }
         });
 
@@ -286,7 +365,6 @@ public class HOADON extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2)
             .addGroup(layout.createSequentialGroup()
                 .addGap(33, 33, 33)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -302,24 +380,27 @@ public class HOADON extends javax.swing.JFrame {
                         .addGap(52, 52, 52)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(Ngay, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(KH, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(MA, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 187, Short.MAX_VALUE)
+                            .addComponent(MA, javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(SL, javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(NV, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(SP, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(Gia, javax.swing.GroupLayout.Alignment.LEADING))
-                        .addGap(337, 337, 337))
+                            .addComponent(Gia, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(KH2, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(51, 51, 51))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(btnNew, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(68, 68, 68)
-                        .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(62, 62, 62)
-                        .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(80, 80, 80)
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnNew, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnSave, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jButton1)
+                        .addGap(18, 18, 18)
                         .addComponent(jButton2)
-                        .addGap(58, 58, 58))))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 623, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -332,10 +413,10 @@ public class HOADON extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
                     .addComponent(NV, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(31, 31, 31)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGap(38, 38, 38)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
-                    .addComponent(KH, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(KH2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(31, 31, 31)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel3)
@@ -370,17 +451,24 @@ public class HOADON extends javax.swing.JFrame {
     private void tblQLSPMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblQLSPMouseClicked
 
     }//GEN-LAST:event_tblQLSPMouseClicked
-
+    
+  
+    
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
                 if (check()) {
                     String a = Gia.getText();
                     String b = SL.getText();
                     int c = Integer.parseInt(a)*Integer.parseInt(b);
                     String s =String.valueOf(c);
+                    
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("DD/MM/YYYY");
+                     dateFormat.setLenient(false);
+                    
             hd sp = new hd();
             sp.setMahd(MA.getText());
             sp.setTennv(NV.getSelectedItem().toString());
-            sp.setTenkh(KH.getText());
+//            sp.setTenkh(KH.getText());
+            sp.setTenkh(KH2.getSelectedItem().toString());
             sp.setTensp(SP.getSelectedItem().toString());
             sp.setSl(SL.getText());
             sp.setGia(Gia.getText());
@@ -389,8 +477,9 @@ public class HOADON extends javax.swing.JFrame {
             if (saveHD(sp)) {
                 JOptionPane.showMessageDialog(rootPane, "Lưu thành công!");
                 listt.add(sp);
+                clearValue();
             } else {
-                JOptionPane.showMessageDialog(rootPane, "Nhập lại dữ liệu");
+                JOptionPane.showMessageDialog(rootPane, "Bạn đã nhập sai dữ liệu. Xin hãy nhập lại dữ liệu");
             }
             fillTable();
         }
@@ -470,16 +559,38 @@ public class HOADON extends javax.swing.JFrame {
             System.out.println(p);
         }
     }//GEN-LAST:event_SPActionPerformed
-
+    
+    private void clearValue() {
+        MA.setText(null);
+        NV.getSelectedItem().toString();
+//        KH.setText(null);
+        KH2.getSelectedItem().toString();
+        SP.getSelectedItem().toString();
+        SL.setText(null);
+        Gia.setText(null);
+        Ngay.setText(null);
+    }
     private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
         MA.setText(null);
         NV.getSelectedItem().toString();
-        KH.setText(null);
+//        KH.setText(null);
+        KH2.getSelectedItem().toString();
         SP.getSelectedItem().toString();
         SL.setText(null);
         Gia.setText(null);
         Ngay.setText(null);
     }//GEN-LAST:event_btnNewActionPerformed
+
+    private void KH2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_KH2ActionPerformed
+         ArrayList<kh> li = new ArrayList<>();
+        for(kh p : li ){
+            System.out.println(p);
+        }
+    }//GEN-LAST:event_KH2ActionPerformed
+
+    private void NgayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NgayActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_NgayActionPerformed
 
     /**
      * @param args the command line arguments
@@ -518,7 +629,7 @@ public class HOADON extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField Gia;
-    private javax.swing.JTextField KH;
+    private javax.swing.JComboBox<String> KH2;
     private javax.swing.JTextField MA;
     private javax.swing.JComboBox<String> NV;
     private javax.swing.JTextField Ngay;
